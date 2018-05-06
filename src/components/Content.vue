@@ -9,34 +9,52 @@
             </Header>
             <Layout>
                 <Sider hide-trigger :style="{background: '#fff'}">
-                    <Menu active-name="douban" theme="light" width="auto" :open-names="['1']" @on-select='changePage'>
+                    <Menu active-name="else" theme="light" width="auto" :open-names="['1']" @on-select='changePage'>
                         <Submenu name="1">
                             <template slot="title">
-                                <Icon type="ios-keypad"></Icon>
-                                评论分析
+                                <Icon type="heart"></Icon>
+                                基于 SnowNLP
                             </template>
-                            <MenuItem name="douban"><Icon type="document-text"></Icon>豆瓣评论</MenuItem>
-                            <MenuItem name="restaurant"><Icon type="pizza"></Icon>餐厅评论</MenuItem>
-                            <MenuItem name="else"><Icon type="chatbubbles"></Icon>其他评论</MenuItem>
+                            <MenuItem name="else"><Icon type="document-text"></Icon>各类文本</MenuItem>
+                            <MenuItem name="douban_snowNLP"><Icon type="document-text"></Icon>豆瓣评论</MenuItem>
                         </Submenu>
                         <Submenu name="2">
                             <template slot="title">
-                                <Icon type="ios-keypad"></Icon>
-                                其他分析
+                                <Icon type="heart"></Icon>
+                                基于词袋模型
                             </template>
-                            <MenuItem name="2-1"><Icon type="document-text"></Icon>其他文本</MenuItem>
+                            <!-- <MenuItem name="else"><Icon type="chatbubbles"></Icon>各类文本</MenuItem> -->
+                            <MenuItem name="douban_wb"><Icon type="document-text"></Icon>豆瓣评论</MenuItem>
+                        </Submenu>
+                        <Submenu name="2">
+                            <template slot="title">
+                                <Icon type="heart"></Icon>
+                                基于 Tf-idf 算法
+                            </template>
+                            <MenuItem name="hotel_tfidf"><Icon type="home"></Icon>酒店评论</MenuItem>
                         </Submenu>
                     </Menu>
                 </Sider>
                 <Layout :style="{padding: '24px'}">
-                    <Content :style="{padding: '24px', minHeight: '500px', background: '#fff'}">
-                        <Input v-model="sentence" type="textarea" :autosize="{minRows: 2,maxRows: 6}" placeholder="请输入需要分析的短文本"></Input>
+                    <Content :style="{padding: '24px 36px', minHeight: '500px', minWidth: '400px' ,background: '#fff'}">
+                        <Input v-model="sentence" type="textarea" :autosize="{minRows: 3,maxRows: 7}" placeholder="请输入需要分析的短文本"></Input>
                         <div class="button-group">
                             <Button type="info" @click="predict">开始预测</Button>
                             <Button type="success" @click="randomPredict">随便测测</Button>
                         </div>
                         <div class="result">
-                            <span>情感指数：</span><span v-text="score"></span>
+                            <span>情感指数：</span>
+                            <transition name="fade">
+                                <p v-text="score" class="animated" v-if="hasResult"></p>
+                            </transition>
+                        </div>
+                        <div class="instruction">
+                            <span>使用说明：</span>
+                            <ul>
+                                <li>文本框中输入文本点击“开始预测”按钮可得情感指数</li>
+                                <li>点击“随便测测”按钮可以对随机生成的文本进行情感分析和指数展示</li>
+                                <li>情感指数为 0-5 区间内任意值，对应情感为讨厌到喜欢，情感指数越低表示越消极，反之越积极</li>
+                            </ul>
                         </div>
                     </Content>
                 </Layout>
@@ -47,24 +65,33 @@
 
 <script>
 import {send} from '../api/index';
+import { Message } from 'iview';
 
 export default {
     data () {
         return {
             sentence: '',
             score: undefined,
-            type: 'douban'
+            type: 'else',
+            hasResult: false
         }
     },
     methods: {
         predict() {
-            if(this.sentence !== '') {
-               send({
-                   "sentence": this.sentence,
-                   "type": this.type
-               }).then((response) => {
-                   this.score = response
-               })
+            if(this.sentence === '') {
+                Message.error({
+                    content: '输入不能为空。试着写点什么吧！',
+                    duration: 3
+                });
+            } else {
+                this.hasResult = false;
+                send({
+                    "sentence": this.sentence,
+                    "type": this.type
+                }).then((response) => {
+                    this.score = response
+                    this.hasResult = true
+                })
             }
         },
         randomPredict() {
@@ -116,18 +143,40 @@ export default {
 
 .button-group {
     float: right;
-    margin-top: 10px; 
+    margin-top: 14px; 
 }
 
 .button-group button {
-    margin-left: 8px; 
+    margin-left: 12px; 
 }
 
 .result {
-    margin-top: 10px;
+    margin-top: 60px;
+    height: 200px;
 }
 
-.result span {
+.result > p {
+    text-align: center;
+    font-size: 3em;
+    margin-top: 1em; 
+}
+
+.result, .instruction {
     font-size: 16px;
+}
+
+.instruction {
+    margin-top: 2em;
+}
+
+.instruction > ul {
+    margin-left: 2em;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
 }
 </style>

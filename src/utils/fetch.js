@@ -4,6 +4,7 @@ import { Message } from 'iview';
 // 创建 axios 实例
 const service = axios.create({
     // baseURL: process.env.BASE_API,  // api的base_url
+    // baseURL: 'http://45.32.65.148:80/',
     baseURL: 'http://localhost:5000/',
     timeout: 10000 // 请求超时时间
 });
